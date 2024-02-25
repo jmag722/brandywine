@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brandywine"
+version = "0.0.1"
+authors = [
+    {name = "Jared Magnusson", email = "jmag722@gmail.com"},
+]
+description = "Compressible Euler equation solver for comparing different numerical schemes."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+keywords = [
+    "brandywine", "python", "euler", "cfd", "fluids", "shock", "sod", "tube", "1D"
+]
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Operating System :: OS Independent",
+]
+
+dynamic = ["dependencies"]
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+optional-dependencies = {dev = { file = ["requirements-dev.txt"] }}
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+pythonpath = [
+  "."
+]
+
+[project.urls]
+"Homepage" = "https://github.com/jmag722/brandywine"
+"Bug Reports" = "https://github.com/jmag722/brandywine/issues"
