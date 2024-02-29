@@ -5,11 +5,13 @@ import brandywine.grid as grd
 class ShockTubeSolver:
     def __init__(self, p_left:float, rho_left:float,
                  p_right:float, rho_right:float,
-                 ncells:int, L:float=None,
-                 L_left:float=None, L_right:float=None,
+                 ncells:int, ntimesteps:int, cfl:float,
+                 L:float=None, L_left:float=None, L_right:float=None,
                  gam:float=1.4, Rgas:float=287.):
         self.gam = gam
         self.Rgas = Rgas
+        self.times = np.zeros(ntimesteps)
+        self.cfl = cfl
         self.x = self._init_grid(ncells, L, L_left, L_right)
         self.U = self._init_cvars(p_left, rho_left, p_right, rho_right)
 

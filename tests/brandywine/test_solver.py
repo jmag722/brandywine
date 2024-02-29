@@ -16,8 +16,17 @@ class TestShockTubeSolver:
     rho_right = 4
     gam = 1.3
     Rgas = 289
+    cfl = 2.1
+    ntimesteps = 200
     sod = sol.ShockTubeSolver(p_left, rho_left, p_right, rho_right,
-                              100, L=3., gam=gam, Rgas=Rgas)
+                              100, L=3., gam=gam, Rgas=Rgas, cfl=cfl,
+                              ntimesteps=ntimesteps)
+    
+    def test_cfl(self):
+        assert self.sod.cfl == self.cfl
+
+    def test_times(self):
+        np.testing.assert_equal(self.sod.times, np.zeros(self.ntimesteps))
     
     def test_gam(self):
         assert self.sod.gam == self.gam
