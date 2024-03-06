@@ -1,16 +1,28 @@
 import numpy as np
 
 class Grid1D:
+    nghosts:int = 2
     def __init__(self, x:np.ndarray):
-        self._x = x
+        self._x = np.zeros(x.size+Grid1D.nghosts)
+        self._x[Grid1D.nghosts//2: -Grid1D.nghosts//2] = x
+        self._x[0] = 2*x[0] - x[1]
+        self._x[-1] = 2*x[-1] - x[-2]
     
     @property
-    def nvertices(self):
+    def ntotvertices(self):
         return self._x.size
         
     @property
+    def ntotcells(self):
+        return self.ntotvertices - 1
+    
+    @property
+    def nvertices(self):
+        return self.ntotvertices - Grid1D.nghosts
+        
+    @property
     def ncells(self):
-        return self.nvertices - 1
+        return self.ntotcells - Grid1D.nghosts
     
     @property
     def dx(self):
@@ -23,8 +35,8 @@ class Grid1D:
     def __getitem__(self, key:int):
         return self._x[key]
     
-    def __setitem__(self, key:int, value:float):
-        self._x[key] = value
+    # def __setitem__(self, key:int, value:float):
+    #     self._x[key] = value
 
     def __lt__(self, other):
         return self._x < other

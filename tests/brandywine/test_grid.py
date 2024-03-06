@@ -14,8 +14,14 @@ class TestGrid1D:
     def test_nvertices(self):
         assert self.grid.nvertices == self.ncells+1
 
+    def test_ntotcells(self):
+        assert self.grid.ntotcells == self.ncells + grd.Grid1D.nghosts
+
+    def test_ntotvertices(self):
+        assert self.grid.ntotvertices == self.ncells+1 + grd.Grid1D.nghosts
+
     def test_dx(self):
-        np.testing.assert_allclose(self.grid.dx, np.zeros(self.ncells)+0.1)
+        np.testing.assert_allclose(self.grid.dx, np.zeros(self.ncells+2)+0.1)
 
     def test_cc(self):
-        np.testing.assert_allclose(self.grid.cc, np.linspace(-9.95,9.95, 200))
+        np.testing.assert_allclose(self.grid.cc, np.linspace(-10.05, 10.05, 202))
