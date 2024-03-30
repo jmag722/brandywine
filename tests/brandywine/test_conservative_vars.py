@@ -1,48 +1,67 @@
 import numpy as np
-import brandywine.conservative_vars as cv
+import brandywine.conservative_vars as cv        
 
 class TestConservativeVars:
-    rho = np.random.rand(10) + 1
-    u = np.zeros_like(rho)+3
-    rhou = rho*u
-    e = np.random.rand(10)*10+50
-    U = cv.ConservativeVars(rho, rhou, e)
+    density = np.random.rand(10) + 1
+    velocities = np.random.rand(10)+30
+    momentum = density*velocities
+    kinetic_energies = 0.5*density*velocities**2
+    total_energy = np.random.rand(10)*10+50
+    U = cv.ConservativeVars(density, momentum, total_energy)
 
     def test_shape(self):
-        assert self.U.shape == (self.rho.size, cv.Index.SIZE)
+        assert self.U.shape == (self.density.size, cv.Index.SIZE)
 
     def test_size(self):
-        assert self.U.size == self.rho.size
+        assert self.U.size == self.density.size
 
-    def test_r(self):
-        np.testing.assert_equal(self.U.r, self.rho)
+    def test_density(self):
+        np.testing.assert_equal(self.U.density, self.density)
     
-    def test_ru(self):
-        np.testing.assert_equal(self.U.ru, self.rhou)
+    def test_momentum(self):
+        np.testing.assert_equal(self.U.momentum, self.momentum)
 
-    def test_ke(self):
-        np.testing.assert_allclose(self.U.ke, 0.5*self.rho*self.u**2)
-
-    def test_u(self):
-        np.testing.assert_allclose(self.U.u, self.u)
-
-    def test_e(self):
-        np.testing.assert_equal(self.U.e, self.e)
+    def test_total_energy(self):
+        np.testing.assert_equal(self.U.total_energy, self.total_energy)
     
     def test_getitem(self):
-        for i in range(self.rho.size):
+        for i in range(self.density.size):
             np.testing.assert_equal(
                 self.U[i],
-                np.array([self.rho[i], self.rhou[i], self.e[i]])
+                np.array([self.density[i], self.momentum[i], self.total_energy[i]])
             )
 
     def test_setitem(self):
-        self.U[4] = np.array([0,1,0])
-        for i in range(self.rho.size):
+        density = np.random.rand(10) + 1
+        momentum = np.random.rand(10)+30
+        total_energy = np.random.rand(10)*10+50
+        U = cv.ConservativeVars(density, momentum, total_energy)
+        U[4] = np.array([0,1,0])
+        for i in range(density.size):
             if i != 4:
                 np.testing.assert_equal(
-                    self.U[i],
-                    np.array([self.rho[i], self.rhou[i], self.e[i]])
+                    U[i],
+                    np.array([density[i], momentum[i], total_energy[i]])
                 )
             else:
-                np.testing.assert_equal(self.U[i], np.array([0,1,0]))
+                np.testing.assert_equal(U[i], np.array([0,1,0]))
+
+    def test_density(self):
+        np.testing.assert_equal(cv.density(self.U[3]), self.density[3])
+        np.testing.assert_equal(cv.density(self.U), self.density)
+
+    def test_momentum(self):
+        np.testing.assert_equal(cv.momentum(self.U[3]), self.momentum[3])
+        np.testing.assert_equal(cv.momentum(self.U), self.momentum)
+
+    def test_kinetic_energy(self):
+        np.testing.assert_allclose(cv.kinetic_energy(self.U[3]), self.kinetic_energies[3])
+        np.testing.assert_allclose(cv.kinetic_energy(self.U), self.kinetic_energies)
+
+    def test_total_energy(self):
+        np.testing.assert_equal(cv.total_energy(self.U[3]), self.total_energy[3])
+        np.testing.assert_equal(cv.total_energy(self.U), self.total_energy)
+
+    def test_velocity(self):
+        np.testing.assert_allclose(cv.velocity(self.U[5]), self.velocities[5])
+        np.testing.assert_allclose(cv.velocity(self.U), self.velocities)

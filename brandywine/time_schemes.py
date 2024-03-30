@@ -1,4 +1,4 @@
-import brandywine.conservative_vars as cv
+import numpy as np
 
-def rk1(U0:cv.ConservativeVars, dt:float, spatial_derivative):
+def rk1(U0:np.ndarray, dt:float, spatial_derivative:np.ndarray):
     return U0 - dt*spatial_derivative

@@ -4,60 +4,36 @@ import numpy as np
 @unique
 class Index(IntEnum):
     RHO = 0
-    RHOU = 1
-    E = 2
+    MOMX = 1
+    TOTENERGY = 2
     SIZE = 3
 
 class ConservativeVars:
-    def __init__(self, rho:np.ndarray, rhou:np.ndarray, e:np.ndarray):
-        assert rho.shape == rhou.shape
-        assert rhou.shape == e.shape
-        ncells = rho.size
-        self._arr = np.empty((ncells, Index.SIZE), dtype=np.float64, order="C")
-        self.r = rho
-        self.ru = rhou
-        self.e = e
-
-    @property
-    def r(self):
-        return self._arr[:, Index.RHO]
-    
-    @r.setter
-    def r(self, density):
+    def __init__(self, density:np.ndarray, momentum:np.ndarray, total_energy:np.ndarray):
+        assert density.shape == momentum.shape
+        assert momentum.shape == total_energy.shape
+        ncells = density.size
+        self._arr = np.empty((ncells, Index.SIZE), dtype=np.float64)
         self._arr[:, Index.RHO] = density
-    
-    @property
-    def ru(self):
-        return self._arr[:, Index.RHOU]
-
-    @ru.setter
-    def ru(self, momentum):
-        self._arr[:, Index.RHOU] = momentum
+        self._arr[:, Index.MOMX] = momentum
+        self._arr[:, Index.TOTENERGY] = total_energy
 
     @property
-    def ru2(self):
-        return self.ru * self.ru / self.r
+    def density(self):
+        return density(self._arr)
     
     @property
-    def ke(self):
-        return 0.5 * self.ru2
-    
-    @property
-    def u(self):
-        return self.ru / self.r
-    
-    @property
-    def e(self):
-        return self._arr[:, Index.E]
+    def momentum(self):
+        return momentum(self._arr)
 
-    @e.setter
-    def e(self, energy):
-        self._arr[:, Index.E] = energy
+    @property
+    def total_energy(self):
+        return total_energy(self._arr)
 
-    def __getitem__(self, key:int):
+    def __getitem__(self, key):
         return self._arr[key]
     
-    def __setitem__(self, key:int, value:np.ndarray):
+    def __setitem__(self, key, value:np.ndarray):
         self._arr[key] = value
 
     def __array__(self):
@@ -70,3 +46,18 @@ class ConservativeVars:
     @property
     def shape(self):
         return self._arr.shape
+    
+def density(cvar:np.ndarray):
+    return cvar[..., Index.RHO]
+
+def momentum(cvar:np.ndarray):
+    return cvar[..., Index.MOMX]
+
+def velocity(cvar:np.ndarray):
+    return momentum(cvar) / density(cvar)
+
+def kinetic_energy(cvar:np.ndarray):
+    return 0.5 * momentum(cvar) * velocity(cvar)
+
+def total_energy(cvar:np.ndarray):
+    return cvar[..., Index.TOTENERGY]
