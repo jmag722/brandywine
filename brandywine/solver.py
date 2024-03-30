@@ -2,6 +2,9 @@ from copy import deepcopy
 import numpy as np
 import brandywine.conservative_vars as cv
 import brandywine.boundary_conds as bc
+import brandywine.state_equations as eos
+import brandywine.time_schemes as ts
+import brandywine.inviscid_flux as ifx
 import brandywine.grid as grd
 
 class ShockTubeSolver:
@@ -20,6 +23,10 @@ class ShockTubeSolver:
         # TODO string inputs for flux scheme
         # TODO string inputs for time scheme
         # TODO initialize output data object - output to vtk, csv, etc
+
+    @property
+    def total_time(self):
+        return np.sum(self.times)
 
     def _init_grid(self, ncells:int, L=None, L_left=None, L_right=None):
         if L is None and all([v is not None for v in [L_left, L_right]]):
@@ -47,15 +54,26 @@ class ShockTubeSolver:
         u_arr = np.zeros(self.x.ntotcells)
 
         return cv.ConservativeVars(
-            r_arr, r_arr*u_arr, total_internal_energy(p_arr, r_arr, u_arr,
-                                                      self.gam)
+            r_arr, r_arr*u_arr, eos.total_internal_energy(p_arr, r_arr, u_arr,
+                                                          self.gam)
         )
     
     def solve(self):
         for i in range(self.times.size):
             self.times[i] = self.minimum_timestep()
             self.update_bc()
-            # flux schemes plugin here
+            for j in self.x.range_cells:
+                self.U[j] = ts.rk1(
+                    U0 = self.U0[j],
+                    dt = self.times[i],
+                    spatial_derivative = ifx.flux_lax_friederich(
+                        U = self.U0,
+                        index = j,
+                        gam = self.gam,
+                        dx = self.x[j+1]-self.x[j],
+                        dt = self.times[i]
+                    )
+                )
             self.U0 = self.U
 
     def minimum_timestep(self):
@@ -67,17 +85,8 @@ class ShockTubeSolver:
 
     @property
     def p(self):
-        return pressure(self.U.e, self.U.ke, self.gam)
+        return eos.pressure(self.U.e, self.U.ke, self.gam)
     
     @property
     def a(self):
-        return sound_speed(self.p, self.U.r, self.gam)
-    
-def pressure(total_internal_e, kinetic_e, gam:float):
-    return (gam-1) * (total_internal_e - kinetic_e)
-    
-def sound_speed(p, rho, gam:float):
-    return np.sqrt(gam*p/rho)
-    
-def total_internal_energy(p, rho, u, gam:float):
-    return p/(gam-1) + 0.5*rho*u*u
+        return eos.sound_speed(self.p, self.U.r, self.gam)

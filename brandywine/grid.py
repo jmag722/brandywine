@@ -4,9 +4,27 @@ class Grid1D:
     nghosts:int = 2
     def __init__(self, x:np.ndarray):
         self._x = np.zeros(x.size+Grid1D.nghosts)
-        self._x[Grid1D.nghosts//2: -Grid1D.nghosts//2] = x
+        self._x[self.istart_vert: self.iend_vert+1] = x
         self._x[0] = 2*x[0] - x[1]
         self._x[-1] = 2*x[-1] - x[-2]
+
+    @property
+    def istart_cell(self):
+        return Grid1D.nghosts//2
+    @property
+    def istart_vert(self):
+        return Grid1D.nghosts//2
+    
+    @property
+    def iend_cell(self):
+        return self.istart_cell + self.ncells - 1
+    @property
+    def iend_vert(self):
+        return self.istart_vert + self.nvertices - 1
+
+    @property
+    def range_cells(self):
+        return range(self.istart_cell, self.iend_cell + 1)
     
     @property
     def ntotvertices(self):

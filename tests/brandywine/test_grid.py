@@ -8,6 +8,19 @@ class TestGrid1D:
     x = np.linspace(start, stop, ncells+1)
     grid = grd.Grid1D(x)
 
+    def test_istart_cell(self):
+        assert self.grid.istart_cell == 1
+    def test_istart_vert(self):
+        assert self.grid.istart_vert == 1
+    
+    def test_iend_cell(self):
+        assert self.grid.iend_cell == 200
+    def test_iend_vert(self):
+        assert self.grid.iend_vert == 201
+
+    def test_range_cells(self):
+        assert list(self.grid.range_cells) == list(range(1, self.grid.iend_cell+1))
+
     def test_ncells(self):
         assert self.grid.ncells == self.ncells
 

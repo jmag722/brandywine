@@ -35,8 +35,12 @@ class ConservativeVars:
         self._arr[:, Index.RHOU] = momentum
 
     @property
+    def ru2(self):
+        return self.ru * self.ru / self.r
+    
+    @property
     def ke(self):
-        return 0.5 * self.ru * self.ru / self.r
+        return 0.5 * self.ru2
     
     @property
     def u(self):
