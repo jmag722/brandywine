@@ -75,18 +75,21 @@ class ShockTubeSolver:
                         dt = self.timesteps[i]
                     )
                 )
-            self.U0[:] = self.U[:]
+            self.update_previous_soln()
 
     def minimum_timestep(self):
-        return self.cfl*self.x.dx.min() / np.max(cv.velocity(self.U) + self.a())
+        return self.cfl*self.x.dx.min() / np.max(self.U.velocity + self.a())
     
     def update_bc(self):
         self.U[0] = bc.inviscid_wall0(self.U[1])
         self.U[-1] = bc.inviscid_wall0(self.U[-2])
+
+    def update_previous_soln(self):
+        self.U0[:] = self.U[:]
     
     def a(self):
         return eos.sound_speed(
-            pressure=eos.pressure(self.U.total_energy, cv.kinetic_energy(self.U), self.gam),
+            pressure=eos.pressure(self.U.total_energy, self.U.kinetic_energy, self.gam),
             density=self.U.density,
             gam=self.gam
         )

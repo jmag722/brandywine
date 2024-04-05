@@ -20,15 +20,23 @@ class ConservativeVars:
 
     @property
     def density(self):
-        return density(self._arr)
+        return np.apply_along_axis(density, axis=1, arr=self._arr)
+    
+    @property
+    def velocity(self):
+        return self.momentum / self.density
+    
+    @property
+    def kinetic_energy(self):
+        return 0.5 * self.momentum**2 / self.density
     
     @property
     def momentum(self):
-        return momentum(self._arr)
+        return np.apply_along_axis(momentum, axis=1, arr=self._arr)
 
     @property
     def total_energy(self):
-        return total_energy(self._arr)
+        return np.apply_along_axis(total_energy, axis=1, arr=self._arr)
 
     def __getitem__(self, key):
         return self._arr[key]
@@ -48,16 +56,16 @@ class ConservativeVars:
         return self._arr.shape
     
 def density(cvar:np.ndarray):
-    return cvar[..., Index.RHO]
+    return cvar[Index.RHO]
 
 def momentum(cvar:np.ndarray):
-    return cvar[..., Index.MOMX]
+    return cvar[Index.MOMX]
 
 def velocity(cvar:np.ndarray):
-    return momentum(cvar) / density(cvar)
+    return cvar[Index.MOMX] / cvar[Index.RHO]
 
 def kinetic_energy(cvar:np.ndarray):
-    return 0.5 * momentum(cvar) * velocity(cvar)
+    return 0.5 * cvar[Index.MOMX] * cvar[Index.MOMX] / cvar[Index.RHO]
 
 def total_energy(cvar:np.ndarray):
-    return cvar[..., Index.TOTENERGY]
+    return cvar[Index.TOTENERGY]
