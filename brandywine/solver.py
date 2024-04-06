@@ -3,8 +3,8 @@ import numpy as np
 import brandywine.conservative_vars as cv
 import brandywine.boundary_conds as bc
 import brandywine.state_equations as eos
-import brandywine.time_schemes as ts
-import brandywine.inviscid_flux as ifx
+import brandywine.time_schemes.temporal_flux as tfx
+import brandywine.spatial_schemes.inviscid_flux as ifx
 import brandywine.grid as grd
 
 class ShockTubeSolver:
@@ -12,7 +12,8 @@ class ShockTubeSolver:
                  p_right:float, rho_right:float,
                  ncells:int, ntimesteps:int, cfl:float,
                  L:float=None, L_left:float=None, L_right:float=None,
-                 gam:float=1.4, Rgas:float=287.):
+                 gam:float=1.4, Rgas:float=287.,
+                 inviscid_scheme:str="lax", time_scheme:str="rk1"):
         self.gam = gam
         self.Rgas = Rgas
         self.timesteps = np.zeros(ntimesteps)
@@ -20,8 +21,8 @@ class ShockTubeSolver:
         self.x = self._init_grid(ncells, L, L_left, L_right)
         self.U = self._init_cvars(p_left, rho_left, p_right, rho_right)
         self.U0 = deepcopy(self.U)
-        # TODO string inputs for flux scheme
-        # TODO string inputs for time scheme
+        self.spatial_scheme = ifx.InviscidFluxMapper.get_inviscid_scheme(inviscid_scheme)
+        self.time_scheme = tfx.TemporalFluxMapper.get_time_scheme(time_scheme)
         # TODO initialize output data object - output to vtk, csv, etc
 
     @property
@@ -64,10 +65,10 @@ class ShockTubeSolver:
             self.timesteps[i] = self.minimum_timestep()
             self.update_bc()
             for j in self.x.range_cells:
-                self.U[j] = ts.rk1(
+                self.U[j] = self.time_scheme(
                     U0 = self.U0[j],
                     dt = self.timesteps[i],
-                    spatial_derivative = ifx.flux_lax_friederich(
+                    spatial_derivative = self.spatial_scheme(
                         U = self.U0,
                         index = j,
                         gam = self.gam,
