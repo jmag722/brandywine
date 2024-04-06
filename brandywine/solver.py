@@ -21,8 +21,8 @@ class ShockTubeSolver:
         self.x = self._init_grid(ncells, L, L_left, L_right)
         self.U = self._init_cvars(p_left, rho_left, p_right, rho_right)
         self.U0 = deepcopy(self.U)
-        self.spatial_scheme = ifx.InviscidFluxMapper.get_inviscid_scheme(inviscid_scheme)
-        self.time_scheme = tfx.TemporalFluxMapper.get_time_scheme(time_scheme)
+        self.spatial_scheme = ifx.get_inviscid_scheme(inviscid_scheme)
+        self.time_scheme = tfx.get_time_scheme(time_scheme)
         # TODO initialize output data object - output to vtk, csv, etc
 
     @property

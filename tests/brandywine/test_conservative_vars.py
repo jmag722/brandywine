@@ -9,12 +9,6 @@ class TestConservativeVars:
     total_energy = np.random.rand(10)*10+50
     U = cv.ConservativeVars(density, momentum, total_energy)
 
-    def test_property_shape(self):
-        assert self.U.shape == (self.density.size, cv.Index.SIZE)
-
-    def test_property_size(self):
-        assert self.U.size == self.density.size
-
     def test_property_density(self):
         np.testing.assert_equal(self.U.density, self.density)
     
