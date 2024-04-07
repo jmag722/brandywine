@@ -18,4 +18,4 @@ def runge_kutta1(U0:np.ndarray, dt:float, spatial_derivative:np.ndarray):
     np.ndarray
         Solution at new timestep
     """    
-    return U0 - dt*spatial_derivative
+    return U0 - dt * spatial_derivative

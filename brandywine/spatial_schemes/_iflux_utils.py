@@ -5,8 +5,8 @@ import brandywine.state_equations as eos
 
 def inviscid_flux_vector(U:np.ndarray, gam:float):
     """
-    Flux vector E, only taking into account inviscid components. Viscosity and heat flux
-        are omitted. Relation is [rho*u, rho*u^2+p, (e+p)*u]^T, where e is the total
+    Flux vector E, only taking into account inviscid components.
+        Relation is [rho*u, rho*u^2+p, (e+p)*u]^T, where e is the total
         energy density, p is pressure, u is velocity, and rho is density
 
     Parameters
