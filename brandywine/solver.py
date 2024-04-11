@@ -13,7 +13,8 @@ class ShockTubeSolver:
                  ncells:int, ntimesteps:int, cfl:float,
                  L:float=None, L_left:float=None, L_right:float=None,
                  gam:float=1.4, Rgas:float=287.,
-                 inviscid_scheme:str="lax", time_scheme:str="rk1"):
+                 inviscid_scheme:str="lax", time_scheme:str="rk1",
+                 iflux_kwargs:dict = None):
         self.gam = gam
         self.Rgas = Rgas
         self.timesteps = np.zeros(ntimesteps)
@@ -24,6 +25,10 @@ class ShockTubeSolver:
         self.spatial_scheme = ifx.get_inviscid_scheme(inviscid_scheme)
         self.time_scheme = tfx.get_time_scheme(time_scheme)
         # TODO initialize output data object - output to vtk, csv, etc
+        if iflux_kwargs is None:
+            self.iflux_kwargs = {}
+        else:
+            self.iflux_kwargs = iflux_kwargs
 
     @property
     def total_time(self):
@@ -68,19 +73,19 @@ class ShockTubeSolver:
                 self.U[j] = self.time_scheme(
                     U0 = self.U0[j],
                     dt = self.timesteps[i],
-                    spatial_derivative = ifx.spatial_derivative(
+                    spatial_derivative = self.spatial_scheme(
                         U = self.U0,
                         index = j,
                         gam = self.gam,
                         dx = self.x[j+1]-self.x[j],
                         dt = self.timesteps[i],
-                        flux_func = self.spatial_scheme
+                        **self.iflux_kwargs
                     )
                 )
             self.update_previous_soln()
 
     def minimum_timestep(self):
-        return self.cfl*self.x.dx.min() / np.max(self.U.velocity + self.a())
+        return self.cfl*self.x.dx.min() / np.max(np.abs(self.U.velocity) + self.a())
     
     def update_bc(self):
         self.U[0] = bc.inviscid_wall0(self.U[1])
