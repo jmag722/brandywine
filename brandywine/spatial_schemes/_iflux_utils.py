@@ -62,13 +62,20 @@ def inviscid_flux_jacobian(U:np.ndarray, gam:float):
           gam * u ]
     ])
 
-def artificial_dissipation(Ui:np.ndarray, Uip1:np.ndarray, gam:float, epsilon:float=0.6,
+def artificial_dissipation(Ui:np.ndarray, Uip1:np.ndarray, gam:float, epsilon:float=0.3,
                            oscillation_strength:float=1.0):
     """
     Artificial dissipation D
     D_{i+1/2} = epsilon*oscillation_strength*(|u|+c)_1/2
 
-    Oscillation strength is usually the pressure term.
+    Source:
+    MacCormack, R. W. (2014). Numerical computation of compressible and
+    viscous flow. American Institute of Aeronautics and Astronautics, Inc.
+
+    Original source:
+    Baldwin, B. and MacCormack, R.: Interaction of strong-shock wave with turbulent
+        boundary layer. Proceedings of the Fourth International Conference on Numerical
+        Methods in Fluid Dynamics Lecture Notes in Physics, (Berlin Heidelberg), 1975.
 
     Parameters
     ----------
@@ -79,11 +86,10 @@ def artificial_dissipation(Ui:np.ndarray, Uip1:np.ndarray, gam:float, epsilon:fl
     gam : float
         ratio of specific heats gamma
     epsilon : float, optional
-        term to remove unwanted numerical error, by default 0.6
+        term to remove unwanted numerical error, by default 0.3
     oscillation_strength : float, optional
         Oscillation strength term that is low when solution is smooth,
-        by default 1.0 (first order). Using pressure quotient makes epsilon depend
-        on oscillation strength (MacCormack AIAA 2014)
+        by default 1.0 (first order).
 
     Returns
     -------
@@ -97,9 +103,9 @@ def artificial_dissipation(Ui:np.ndarray, Uip1:np.ndarray, gam:float, epsilon:fl
                + np.abs(cv.velocity(Uip1)) + cv.sound_speed(Uip1, gam))
     )
 
-def pressure_quotient(Uim1:np.ndarray, Ui:np.ndarray, Uip1:np.ndarray, gam:float):
+def pressure_sensor(Uim1:np.ndarray, Ui:np.ndarray, Uip1:np.ndarray, gam:float):
     """
-    Oscillation strength dependent on the pressure between cells.
+    Oscillation strength dependent on the pressure between cells, d2p/4p
 
     |p_{i+1} - 2p_i + p_{i-1}| / (p_{i+1} + 2p_i + p_{i-1})
 
@@ -120,6 +126,6 @@ def pressure_quotient(Uim1:np.ndarray, Ui:np.ndarray, Uip1:np.ndarray, gam:float
         pressure strength term
     """    
     n = np.abs(cv.pressure(cvar=Uip1, gam=gam) - 2*cv.pressure(cvar=Ui, gam=gam)
-                 + cv.pressure(cvar=Uim1, gam=gam))
+             + cv.pressure(cvar=Uim1, gam=gam))
     d = cv.pressure(cvar=Uip1, gam=gam) + 2*cv.pressure(cvar=Ui, gam=gam) + cv.pressure(cvar=Uim1, gam=gam)
     return n / d

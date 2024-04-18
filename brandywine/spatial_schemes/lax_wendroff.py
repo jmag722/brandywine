@@ -3,14 +3,14 @@ import brandywine.conservative_vars as cv
 from brandywine.spatial_schemes._iflux_utils import inviscid_flux_vector as E
 from brandywine.spatial_schemes._iflux_utils import inviscid_flux_jacobian as A
 from brandywine.spatial_schemes._iflux_utils import artificial_dissipation as D
-from brandywine.spatial_schemes._iflux_utils import pressure_quotient as d2p_p
+from brandywine.spatial_schemes._iflux_utils import pressure_sensor as d2p_4p
 
 def spatial_derivative(U:cv.ConservativeVars, index:int, gam:float,
                        dx:float, dt:float, **kwargs):
-    pterm_p = d2p_p(Uim1=U[index-1], Ui=U[index], Uip1=U[index+1], gam=gam)
+    pterm_p = d2p_4p(Uim1=U[index-1], Ui=U[index], Uip1=U[index+1], gam=gam)
     pterm_m = 0.
     if index > 1:
-        pterm_m = d2p_p(Uim1=U[index-2], Ui=U[index-1], Uip1=U[index], gam=gam)
+        pterm_m = d2p_4p(Uim1=U[index-2], Ui=U[index-1], Uip1=U[index], gam=gam)
     return 1/dx * (
         flux_interface(Ui=U[index], Uip1=U[index+1], gam=gam, dx=dx, dt=dt,
                        oscillation_strength=pterm_p, **kwargs)
@@ -44,7 +44,7 @@ def flux_interface(Ui:np.ndarray, Uip1:np.ndarray, gam:float, dx:float, dt:float
     """    
     return (
           0.5*(E(Uip1, gam) + E(Ui, gam))
-        # NOTE adding 0.5 on D here, seems to work better, confirm?
-        - 0.5*D(Ui=Ui, Uip1=Uip1, gam=gam, **kwargs) * (Uip1 - Ui)
+        # if 0.5* term multiplied to D, default epsilon should increase
+        - D(Ui=Ui, Uip1=Uip1, gam=gam, **kwargs) * (Uip1 - Ui)
         - 0.5*dt * A(0.5*(Ui + Uip1), gam) @ (E(Uip1, gam) - E(Ui, gam))/dx
     )
