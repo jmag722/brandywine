@@ -22,13 +22,10 @@ class ShockTubeSolver:
         self.x = self._init_grid(ncells, L, L_left, L_right)
         self.U = self._init_cvars(p_left, rho_left, p_right, rho_right)
         self.U0 = deepcopy(self.U)
-        self.spatial_scheme = ifx.get_inviscid_scheme(inviscid_scheme)
         self.time_scheme = tfx.get_time_scheme(time_scheme)
         # TODO initialize output data object - output to vtk, csv, etc
-        if iflux_kwargs is None:
-            self.iflux_kwargs = {}
-        else:
-            self.iflux_kwargs = iflux_kwargs
+        import brandywine.factory_base as fb
+        self.iflux = fb.InviscidFluxFactory.create(inviscid_scheme, **iflux_kwargs)
 
     @property
     def total_time(self):
@@ -73,13 +70,12 @@ class ShockTubeSolver:
                 self.U[j] = self.time_scheme(
                     U0 = self.U0[j],
                     dt = self.timesteps[i],
-                    spatial_derivative = self.spatial_scheme(
+                    spatial_derivative = self.iflux.spatial_derivative(
                         U = self.U0,
                         index = j,
                         gam = self.gam,
                         dx = self.x[j+1]-self.x[j],
-                        dt = self.timesteps[i],
-                        **self.iflux_kwargs
+                        dt = self.timesteps[i]
                     )
                 )
             self.update_previous_soln()

@@ -1,27 +1,51 @@
-from enum import IntEnum, unique
-import brandywine.spatial_schemes.lax_friedrich as lf
-import brandywine.spatial_schemes.lax_wendroff as lw
+import abc
 
-@unique
-class InviscidFluxId(IntEnum):
-    LAX_FRIEDRICH = 0
-    LAX_WENDROFF = 1
+import numpy as np
+import brandywine.conservative_vars as cv
 
-_inviscid_flux_str2id = {
-    "lax": InviscidFluxId.LAX_FRIEDRICH,
-    "lax-friedrich": InviscidFluxId.LAX_FRIEDRICH,
-    "lf": InviscidFluxId.LAX_FRIEDRICH,
+class InviscidFluxInterface(abc.ABC):
+    @classmethod
+    @abc.abstractmethod
+    def names(cls) -> list[str]:
+        raise NotImplementedError("Child class must share its ID names.")
+    
+    @abc.abstractmethod
+    def __init__(self, **kwargs):
+        pass
 
-    "lax-wendroff": InviscidFluxId.LAX_WENDROFF,
-    "lw": InviscidFluxId.LAX_WENDROFF
-}
-_inviscid_flux_fmap = {
-    InviscidFluxId.LAX_FRIEDRICH: lf.spatial_derivative,
-    InviscidFluxId.LAX_WENDROFF: lw.spatial_derivative
-}
+    def spatial_derivative(self,
+        U:cv.ConservativeVars, index:int, gam:float, dx:float, dt:float):
+        """
+        Spatial derivative: partialE/partialx = 1/dx(E_{i+0.5} - E_{i-0.5})
 
-def get_inviscid_scheme(flux_name:str):
-    if flux_name.lower() not in _inviscid_flux_str2id:
-        raise KeyError(f"Inviscid flux `{flux_name}` is not supported.")
-    flux_id = _inviscid_flux_str2id[flux_name.lower()]
-    return _inviscid_flux_fmap[flux_id]
+        Parameters
+        ----------
+        U : cv.ConservativeVars
+            conservative variable array
+        index : int
+            position in solution grid
+        gam : float
+            ratio of specific heats
+        dx : float
+            grid size
+        dt : float
+            timestep
+
+        Returns
+        -------
+        np.ndarray
+            spatial derivative of the inviscid flux
+        """
+        return 1./dx * (
+            self.flux_interface(Ui=U[index], Uip1=U[index+1], gam=gam,
+                                dx=dx, dt=dt)
+            - self.flux_interface(Ui=U[index-1], Uip1=U[index], gam=gam,
+                                  dx=dx, dt=dt)
+        )
+
+    @abc.abstractmethod
+    def flux_interface(
+        self, Ui:np.ndarray, Uip1:np.ndarray, gam:float,
+        dx:float, dt:float, **kwargs):
+        raise NotImplementedError("Child class must implement its own "
+                                  "flux interface method.")
